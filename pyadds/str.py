@@ -23,7 +23,7 @@ def splitcamel(phrase):
 
 
 def name_of(obj):
-    if hasattr(obj, name):
+    if hasattr(obj, 'name'):
         return obj.name
     else:
         return uncamel(type(obj).__name__)

@@ -2,6 +2,7 @@ from functools import wraps
 import weakref
 
 from asyncio import coroutine, gather
+from .str import name_of
 
 class Named:
     def __init__(self, *args, name, **kws):
@@ -35,13 +36,16 @@ class Descr(Named):
         return key in dct
 
     @classmethod
-    def iter(desc, obj):
+    def iter(desc, obj, bind=False):
         """ iteratete over all fields of the object of this descriptors class """
         cls = type(obj)
         for name in dir(cls):
             attr = getattr(cls, name)
             if isinstance(attr, desc):
-                yield attr
+                if bind:
+                    yield attr.__get__(obj)
+                else:
+                    yield attr
 
 
 class ObjDescr(Descr):
