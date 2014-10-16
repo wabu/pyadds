@@ -51,23 +51,23 @@ class Spawner:
         result = asyncio.get_event_loop().run_until_complete(coro(*args, **kws))
         print('!!!', 'done with', name, '=>', result)
 
-    def _do_spawn(self, entry, method, args, kws):
+    def _do_spawn(self, entry, method, args, kws, __name__=None):
         """ calls a method inside a newly create process, returning the pid """
         obj = method.__self__
         name = method.__name__
 
-        proc = self.mp.Process(target=caller, args=(self, entry, (obj, name, args, kws)))
+        proc = self.mp.Process(target=caller, args=(self, entry, (obj, name, args, kws)), name=__name__)
         proc.start()
         return proc
 
-    def spawn(self, method, *args, **kws):
+    def spawn(self, method, *args, __name__=None, **kws):
         """ spawn a process and call a method inside it """
-        return self._do_spawn('_entry', method, args, kws)
+        return self._do_spawn('_entry', method, args, kws, __name__=__name__)
 
     @asyncio.coroutine
-    def cospawn(self, coro, *args, **kws):
+    def cospawn(self, coro, *args, __name__=None, **kws):
         """ spawn a process and call a coroutine inside it """
-        return self._do_spawn('_coentry', coro, args, kws)
+        return self._do_spawn('_coentry', coro, args, kws, __name__=__name__)
 
 
 
