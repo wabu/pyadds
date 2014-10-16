@@ -23,7 +23,15 @@ def splitcamel(phrase):
 
 
 def name_of(obj):
-    if hasattr(obj, 'name'):
+    if isinstance(obj, str):
+        return uncamel(obj)
+    elif hasattr(obj, 'name'):
         return obj.name
     else:
-        return uncamel(type(obj).__name__)
+        cls = obj if isinstance(obj, type) else type(obj)
+        return uncamel(cls.__name__)
+
+def abbrev(obj, n=3):
+    name = re.sub(r'\W', '', name_of(obj))
+    cons = re.findall('[bcdfghjklmnpqrstvwxyz]', name)
+    return ''.join(cons[:n])

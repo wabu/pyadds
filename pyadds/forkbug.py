@@ -2,19 +2,20 @@ from contextlib import contextmanager
 import os
 import asyncio
 
-import logging
-logger = logging.getLogger(__name__)
+from .logging import get_logger
+
+logger = get_logger(__name__, short='bug')
 
 fork_debug = True
 
 def fork_debugger(namespace=None):
-    logger.warn('forking with ipython kernel for debugging ...')
+    logger.warning('forking with ipython kernel for debugging ...')
     try:
         from IPython import embed_kernel, get_ipython, Config, config, terminal
         from IPython.kernel.zmq import kernelapp
         curr = get_ipython()
         if curr:
-            logger.warn("there's a current ipython running (%r)", curr)
+            logger.warning("there's a current ipython running (%r)", curr)
             for cls in terminal.interactiveshell.TerminalInteractiveShell.mro():
                 if hasattr(cls, 'clear_instance'):
                     cls.clear_instance()
@@ -25,10 +26,11 @@ def fork_debugger(namespace=None):
         conf = Config()
         conf.InteractiveShellApp.code_to_run = 'raise'
         if namespace:
-            conf.IPKernelApp.connection_file = '{}/kernel.json'.format(namespace)
-        logger.warn('starting ipython for debugging (%s)', namespace)
+            conf.IPKernelApp.connection_file = '{}/kernel.json'.format(
+                    namespace.namespace())
+        logger.warning('starting ipython for debugging (%s)', namespace)
         embed_kernel(config=conf)
-        logger.warn('embeding finished with debugging (%s)', namespace)
+        logger.warning('embeding finished with debugging (%s)', namespace)
     except Exception as e:
         logger.error('failed to embed ipython: %s', e, exc_info=True)
 
