@@ -8,6 +8,23 @@ def get_logger(name, **extra):
     return logger
 
 
+class lazy(tuple):
+    """
+    >>> logger.debug('%s', lazy(lambda: 'complex stuff')
+    complex stuff
+    """
+    def __new__(cls, lam):
+        return super().__new__(cls, (lam,))
+
+    def __str__(self):
+        lam, = self
+        return str(lam())
+
+    def __repr__(self):
+        lam, = self
+        return repr(lam())
+
+
 def log(cls=None, **extra):
     def annotate(cls):
         name = '.'.join((cls.__module__, cls.__name__))
