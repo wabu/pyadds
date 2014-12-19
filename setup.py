@@ -5,9 +5,6 @@ setup(
     version = "0.1",
     packages = find_packages(),
     scripts = [],
-    install_requires = [
-            'docutils>=0.3',
-            ],
     package_data = {
         '': ['*.txt', '*.rst'],
     },

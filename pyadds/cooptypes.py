@@ -1,42 +1,7 @@
 from collections import Counter
-import logging
-
 from .str import splitcamel
 
-all = ['ClsLogging', 'Modular', 'With']
-
-class GetLogDescriptor:
-    def __get__(self, obj, objtype=None):
-        if objtype is None:
-            objtype = type(obj)
-
-        return logging.getLogger('.'.join((objtype.__module__, objtype.__name__)))
-                
-
-class ClsLogging:
-    """
-    Get a logger for each subclass into the __log `class-local` variable
-    with the qualname of the class, so you have different loggers for each
-    class in a cooperative multi-class hierarchy.
-
-    Examples
-    ---
-    >>> class Foo:
-    ...     def test(self):
-    ...         self.__log.debug("accessing class logger")
-    ... Foo.__log__.name == __name__+'.Foo'
-        True
-    """
-    def __getattr__(self, name):
-        if name.endswith('__log'):
-            for cls in self.__class__.mro():
-                if '_%s__log' % cls.__name__ == name:
-                    self.__dict__[name] = log = cls.__log__
-                    return log
-
-        getattr(super(), name)
-
-    __log__ = GetLogDescriptor()
+__all__ = ['Modular', 'With']
 
 
 class Modular:
@@ -71,6 +36,7 @@ class Modular:
         """
         return With[classes]
 
+
 def extract_commons(limit, *lists):
     words = Counter()
     for lst in lists:
@@ -82,6 +48,7 @@ def extract_commons(limit, *lists):
         common.append(word)
     return common
 
+
 def remove_common(common, *lists):
     for lst in lists:
         for elem in common:
@@ -89,12 +56,14 @@ def remove_common(common, *lists):
                 lst.remove(elem)
     return lists
 
+
 def base_names(cls):
     if ':' in cls.__name__:
         for base in cls.__bases__:
             yield from base_names(base)
     else:
         yield cls.__name__
+
 
 class MetaWith(type):
     @staticmethod
@@ -106,7 +75,7 @@ class MetaWith(type):
                     break
                 bases[base] += 1
         base = bases.most_common(1)[0][0]
-        splits = [[split.capitalize() for split in splitcamel(name)] 
+        splits = [[split.capitalize() for split in splitcamel(name)]
                   for cls in classes for name in base_names(cls)]
         common = extract_commons(len(classes) // 2,
                                  splitcamel(base.__name__), *splits)
@@ -117,5 +86,11 @@ class MetaWith(type):
         name = ''.join(common) + '[' + short + ']'
         return type(name, classes, {})
 
+
 class With(metaclass=MetaWith):
+    """
+    way to create compound classes
+    >>> With[AClass, BClass]
+    ABClass
+    """
     pass

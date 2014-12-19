@@ -4,11 +4,13 @@ import operator
 
 def opsame(op):
     """ checks for type mismatch between first and second argument"""
+
     @wraps(op)
     def checked(self, other):
         if not isinstance(other, type(self)):
             return NotImplemented
         return op(self, other)
+
     return checked
 
 
@@ -40,6 +42,7 @@ def mkop_wraped(cls, name, by=None):
     def fwd_op(self, *args):
         wrapped = getattr(self, by) if by else cls(self)
         return op(wrapped, *args)
+
     return fwd_op
 
 
@@ -65,6 +68,7 @@ def mkop_reflect(cls, name, by=None):
     def reflect_op(self, other):
         wrapped = getattr(self, by) if by else cls(self)
         return op(other, wrapped)
+
     return reflect_op
 
 

@@ -1,9 +1,10 @@
-from .annotate import cached
-
 import asyncio
 import multiprocessing as mp
 
+from .annotate import cached
+
 __spawner__ = None
+
 
 def get_spawner(method=None):
     global __spawner__
@@ -68,6 +69,3 @@ class Spawner:
     def cospawn(self, coro, *args, __name__=None, **kws):
         """ spawn a process and call a coroutine inside it """
         return self._do_spawn('_coentry', coro, args, kws, __name__=__name__)
-
-
-
