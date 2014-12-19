@@ -1,5 +1,5 @@
 import logging
-
+import types
 
 def get_logger(name, **extra):
     logger = logging.getLogger(name)
