@@ -1,18 +1,20 @@
 from contextlib import contextmanager
-import os
 import asyncio
 
-from .logging import get_logger
+from .logging import logging
 
-logger = get_logger(__name__, short='bug')
+
+logger = logging.getLogger(__name__)
 
 fork_debug = True
+
 
 def fork_debugger(namespace=None):
     logger.warning('forking with ipython kernel for debugging ...')
     try:
         from IPython import embed_kernel, get_ipython, Config, config, terminal
         from IPython.kernel.zmq import kernelapp
+
         curr = get_ipython()
         if curr:
             logger.warning("there's a current ipython running (%r)", curr)
@@ -27,12 +29,13 @@ def fork_debugger(namespace=None):
         conf.InteractiveShellApp.code_to_run = 'raise'
         if namespace:
             conf.IPKernelApp.connection_file = '{}/kernel.json'.format(
-                    namespace.namespace())
+                namespace.namespace())
         logger.warning('starting ipython for debugging (%s)', namespace)
         embed_kernel(config=conf)
         logger.warning('embeding finished with debugging (%s)', namespace)
     except Exception as e:
         logger.error('failed to embed ipython: %s', e, exc_info=True)
+
 
 @contextmanager
 def maybug(info=None, namespace=None):
@@ -41,9 +44,9 @@ def maybug(info=None, namespace=None):
     """
     try:
         yield
-    except KeyboardInterrupt as e:
+    except KeyboardInterrupt:
         raise
-    except Exception as e:
+    except Exception:
         logger.error('exception occured inside %s', info or 'maybug context', exc_info=True)
         if fork_debug:
             fork_debugger(namespace=namespace)
