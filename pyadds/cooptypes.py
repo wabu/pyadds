@@ -100,4 +100,8 @@ class MetaWith(type):
 
 
 class Co(metaclass=MetaWith):
-    pass
+    """
+    way to create compound classes
+    >>> Co[AClass, BClass]
+    ABClass
+    """

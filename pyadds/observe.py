@@ -3,8 +3,10 @@ import inspect
 
 from .annotate import Annotate, ObjDescr, Get, Set
 
+
 class Observable:
     """ Observable mixing so others can subscribe to an object """
+
     def __init__(self, *args, **kws):
         super().__init__(*args, **kws)
         self.observers = []
@@ -23,12 +25,14 @@ class Observable:
 def emitting(f):
     """ emit event on method call """
     spec = inspect.getfullargspec(f)
+
     @wraps(f)
     def emit(self, *args, **kws):
         result = f(self, *args, **kws)
         event = Event(f, spec, result, self, args, kws)
         self.notify(event)
         return result
+
     emit.__event__ = f.__name__
     return emit
 
@@ -67,10 +71,10 @@ class Event:
 
     def __repr__(self):
         # don't bind self arg
-        args = self.spec.args[1:] + self.spec.kwonlyargs 
+        args = self.spec.args[1:] + self.spec.kwonlyargs
         # TODO varargs, varkw
         return '{}({})->{!r}'.format(self.__name__, ', '.join('{}={!r}'.format(name, getattr(self, name))
-                    for name in args), self.result)
+                                                              for name in args), self.result)
 
 
 class observes(Annotate, ObjDescr, Get, Set):
@@ -105,6 +109,7 @@ class observes(Annotate, ObjDescr, Get, Set):
         we are watching foo-model
         foo-model emitting foo(num=42, suf='bar')->'42bar'
     """
+
     def __init__(self, definition):
         super().__init__(definition)
         try:
@@ -118,10 +123,12 @@ class observes(Annotate, ObjDescr, Get, Set):
         self.definition(obj, obs)
         if self.subscriptions:
             class SubsCaller:
+                @classmethod
                 def notify(call, event):
                     subs = self.subscriptions.get(event.__name__)
-                    if subs: 
+                    if subs:
                         subs(obj, event)
+
             obs.subscribe(SubsCaller())
 
     def __getattr__(self, name):
@@ -132,5 +139,6 @@ class observes(Annotate, ObjDescr, Get, Set):
         def subscribe(f):
             self.subscriptions[name] = f
             return f
+
         return subscribe
 
