@@ -72,9 +72,7 @@ class Get(Descr):
         try:
             return dct[key]
         except KeyError:
-            val = self.__default__(obj)
-            dct[key] = val
-            return val
+            return self.__default__(obj)
 
     def __default__(self, obj):
         """ provider for default value of descriptor, raising NameError by default """
@@ -83,7 +81,9 @@ class Get(Descr):
 
     @classmethod
     def iter(desc, obj, bind=False):
-        """ iteratete over all fields of the object of this descriptors class """
+        """
+        iteratete over all fields of the object of this descriptors class
+        """
         cls = type(obj)
         for name in dir(cls):
             attr = getattr(cls, name)
@@ -94,41 +94,84 @@ class Get(Descr):
                     yield attr
 
 
+class Defaults(Annotate, Descr):
+    """ descriptor evaluationing definition once """
+    def __default__(self, obj):
+        return self.definition(obj)
+
+
 class Set(Descr):
     """ set/delete descriptor """
+    def __init__(self, *args, **kws):
+        super().__init__(*args, **kws)
+        self._post = None
+
+    def post(self, f):
+        assert callable(f)
+        self._post = f
+        return self
 
     def __set__(self, obj, value):
-        if obj:
-            dct, key = self.lookup(obj)
-            dct[key] = value
-            return value
-        else:
-            return self
+        dct, key = self.lookup(obj)
+        dct[key] = value
+        if self._post:
+            self._post(obj)
 
     def __delete__(self, obj):
         dct, key = self.lookup(obj)
         dct.pop(key, None)
 
 
-class Cached(Annotate, Descr):
-    """ descriptor evaluationing definition once """
+class Cache(Set, Get):
+    """
+    get descriptor remembering the default value for further calls to get
+    """
+    def __get__(self, obj, objtype=None):
+        if obj is None:
+            return self
 
-    def __default__(self, obj):
-        return self.definition(obj)
+        dct, key = self.lookup(obj)
+        try:
+            return dct[key]
+        except KeyError:
+            val = self.__default__(obj)
+            self.__set__(obj, val)
+            return val
 
 
-class delayed(Cached, ObjDescr, Set, Get):
+class attr(Defaults, ObjDescr, Get, Set):
+    """ attribute descriptor with additional features """
+    pass
+
+
+class delayed(Defaults, ObjDescr, Cache):
     """ evaluate once and stored in obj dict, so values get pickled """
     pass
 
 
-class cached(Cached, RefDescr, Set, Get):
+class refers(Defaults, RefDescr, Cache):
     """ keep values around, but reevaluate after pickling """
     pass
 
 
-class initialized(Conotate, RefDescr, Set, Get):
-    """ call coroutine once at with `initialize` with supplied kwargs to get value """
+class once(Defaults, RefDescr, Cache):
+    def __set__(self, obj, value):
+        if obj:
+            dct, key = self.lookup(obj)
+            if key in dct:
+                raise AttributeError(
+                    "Attribute {} of {} can only be set once"
+                    .format(self.name, type(obj)))
+            dct[key] = value
+            return value
+        else:
+            return self
+
+
+class initialized(Conotate, RefDescr, Cache):
+    """
+    call coroutine once at with `initialize` with supplied kwargs to get value
+    """
     pass
 
 

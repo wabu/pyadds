@@ -1,7 +1,7 @@
 from functools import wraps
 import inspect
 
-from .annotate import Annotate, ObjDescr, Get, Set
+from .annotate import Annotate, ObjDescr, Cache, Set
 
 
 class Observable:
@@ -77,7 +77,7 @@ class Event:
                                                               for name in args), self.result)
 
 
-class observes(Annotate, ObjDescr, Get, Set):
+class observes(Annotate, ObjDescr, Cache, Set):
     """
     annotation for an observable that an observer watches
 

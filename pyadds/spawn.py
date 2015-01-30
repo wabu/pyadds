@@ -1,7 +1,7 @@
 import asyncio
 import multiprocessing as mp
 
-from .annotate import cached
+from .annotate import refers
 
 __spawner__ = None
 
@@ -26,7 +26,7 @@ class Spawner:
         self.method = method
         self.setups = []
 
-    @cached
+    @refers
     def mp(self):
         return mp.get_context(self.method)
 
