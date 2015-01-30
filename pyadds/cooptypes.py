@@ -1,4 +1,5 @@
 from collections import Counter
+import weakref
 
 from .str import splitcamel
 
@@ -74,26 +75,35 @@ def base_names(cls):
 
 
 class MetaWith(type):
-    @staticmethod
-    def __getitem__(classes):
-        bases = Counter()
-        for cls in classes:
-            for base in cls.mro():
-                if base in [Modular, object, type]:
-                    break
-                bases[base] += 1
-        base = bases.most_common(1)[0][0]
-        splits = [[split.capitalize() for split in splitcamel(name)]
-                  for cls in classes for name in base_names(cls)]
-        common = extract_commons(len(classes) // 2,
-                                 splitcamel(base.__name__), *splits)
+    def __init__(cls, name, bases, dct):
+        super().__init__(name, bases, dct)
+        cls.__cache__ = weakref.WeakValueDictionary()
 
-        if not common:
-            common = [split.capitalize() for split in splitcamel(base.__name__)]
-        short = ','.join(filter(len,
-                                map(''.join, remove_common(common, *splits))))
-        name = ''.join(common) + '[' + short + ']'
-        return type(name, classes, {})
+    def __getitem__(cls, classes):
+        typ = cls.__cache__.get(classes)
+        if not typ:
+            bases = Counter()
+            for typ in classes:
+                for base in typ.mro():
+                    if base in [Modular, object, type]:
+                        break
+                    bases[base] += 1
+            base = bases.most_common(1)[0][0]
+            splits = [[split.capitalize() for split in splitcamel(name)]
+                      for cls in classes for name in base_names(cls)]
+            common = extract_commons(len(classes) // 2,
+                                     splitcamel(base.__name__), *splits)
+
+            if not common:
+                common = [split.capitalize()
+                          for split in splitcamel(base.__name__)]
+            short = ','.join(filter(len,
+                                    map(''.join,
+                                        remove_common(common, *splits))))
+            name = ''.join(common) + '[' + short + ']'
+            typ = type(name, classes, {})
+            cls.__cache__[classes] = typ
+        return typ
 
     def __or__(self, other):
         return self[other]
