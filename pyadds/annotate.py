@@ -153,6 +153,8 @@ class refers(Defaults, RefDescr, Cache):
     """ keep values around, but reevaluate after pickling """
     pass
 
+cached = refers
+
 
 class once(Defaults, RefDescr, Cache):
     def __set__(self, obj, value):
