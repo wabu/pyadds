@@ -2,6 +2,7 @@ import asyncio
 import multiprocessing as mp
 
 from .annotate import refers
+from .logging import log
 
 __spawner__ = None
 
@@ -21,6 +22,7 @@ def caller(obj, name, args=(), kws={}):
     return getattr(obj, name)(*args, **kws)
 
 
+@log
 class Spawner:
     def __init__(self, method='spawn'):
         self.method = method
@@ -76,6 +78,3 @@ class Spawner:
     def cospawn(self, coro, *args, __name__=None, **kws):
         """ spawn a process and call a coroutine inside it """
         return self._do_spawn('_coentry', coro, args, kws, __name__=__name__)
-
-
-
